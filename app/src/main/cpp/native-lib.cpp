@@ -55,6 +55,7 @@ Java_com_megvii_guoyizhe_jnisamples_LessonActivity_LessonThree(JNIEnv *env, jcla
         (*env).SetObjectArrayElement(result,i,intArr);
         (*env).DeleteLocalRef(intArr);
     }
+    (*env).DeleteLocalRef(clsIntArray);
     return result;
 }
 
