@@ -90,3 +90,19 @@ Java_com_megvii_guoyizhe_jnisamples_MainActivity_stringFromJNI(
     std::string hello = "Hello from C++";
     return env->NewStringUTF(hello.c_str());
 }
+extern "C"
+JNIEXPORT jcharArray JNICALL
+Java_com_megvii_guoyizhe_jnisamples_LessonActivity_LessonFour(JNIEnv *env, jclass type,
+                                                              jcharArray origin_) {
+    jchar *origin = env->GetCharArrayElements(origin_, NULL);
+    char c[2] = {'4','5'};
+    jsize size = env->GetArrayLength(origin_);
+    for (int i = 0; i < size; ++i) {
+        origin[i] = 'C';
+    }
+
+    env->ReleaseCharArrayElements(origin_, origin, 1);//最后一个标志是否将更改后的元素复制到原数组中
+    jcharArray array = env->NewCharArray(size);
+    env->SetCharArrayRegion(array,0, size,origin);
+    return origin_;
+}

@@ -22,6 +22,8 @@ public class LessonActivity extends Activity {
 
     public static native int[][] LessonThree(int size);
 
+    public static native char[] LessonFour(char[] origin);
+
 
     private TextView tv_text;
 
@@ -41,6 +43,8 @@ public class LessonActivity extends Activity {
             case 2:
                 LessonThree(5);
                 break;
+            case 3:
+                System.out.println(LessonFour(new char[]{'3','5'}));
             default:
                 break;
         }
