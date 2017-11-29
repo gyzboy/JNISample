@@ -10,7 +10,7 @@ import android.widget.TextView;
  * Created by guoyizhe on 2017/10/20.
  */
 
-public class LessonActivity extends Activity {
+public class LessonActivity extends Activity implements ITest{
 
     static {
         System.loadLibrary("native-lib");
@@ -23,6 +23,8 @@ public class LessonActivity extends Activity {
     public static native int[][] LessonThree(int size);
 
     public static native char[] LessonFour(char[] origin);
+
+    public static native void InterfaceTest(ITest test);
 
 
     private TextView tv_text;
@@ -45,9 +47,17 @@ public class LessonActivity extends Activity {
                 break;
             case 3:
                 System.out.println(LessonFour(new char[]{'3','5'}));
+                break;
+            case 4:
+                InterfaceTest(this);
+                break;
             default:
                 break;
         }
     }
 
+    @Override
+    public void getInfo(String txt) {
+        System.out.println(txt);
+    }
 }
