@@ -5,6 +5,9 @@
 #include "testHeader.h"
 #include "testVal.h"
 
+#include<pthread.h>
+#include<unistd.h>
+
 int castIntTest();
 
 extern int testValInt;
@@ -136,4 +139,128 @@ Java_com_megvii_guoyizhe_jnisamples_LessonActivity_InterfaceTest(JNIEnv *env, jc
     env->CallVoidMethod(callback, javaCallbackId, str);//根据不同的返回值调用不同的Call方法
 //    env->DeleteGlobalRef(callback);
 
+}
+//线程数
+#define NUMTHREAD  5
+//全局变量
+JavaVM *g_jvm = NULL;
+jobject g_obj = NULL;
+
+JavaVM* gJvm = nullptr;
+static jobject gClassLoader;
+static jmethodID gFindClassMethod;
+
+
+jclass findClass(JNIEnv *env, const char* name) {
+    jclass result = nullptr;
+    if (env)
+    {
+        //这句会出错，所以要处理错误
+        result = env->FindClass(name);
+        jthrowable exception = env->ExceptionOccurred();
+        if (exception)
+        {
+            env->ExceptionClear();
+            return static_cast<jclass>(env->CallObjectMethod(gClassLoader, gFindClassMethod, env->NewStringUTF(name)));
+        }
+    }
+    return result;
+}
+
+JNIEnv* getEnv() {
+    JNIEnv *env;
+    int status = gJvm->GetEnv((void**)&env, JNI_VERSION_1_6);
+    if(status < 0) {
+        status = gJvm->AttachCurrentThread(&env, NULL);
+        if(status < 0) {
+            return nullptr;
+        }
+    }
+    return env;
+}
+
+void *thread_fun(void *arg){
+    JNIEnv *env;
+    jclass cls;
+    jmethodID mid;
+    int mNeedDetach = 0;
+    
+
+//    int getEnvStat = g_jvm->GetEnv((void **)&env,JNI_VERSION_1_6);
+//    if (getEnvStat == JNI_EDETACHED) {
+//        //如果没有， 主动附加到jvm环境中，获取到env
+//        if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
+//            return NULL;
+//        }
+//        mNeedDetach = JNI_TRUE;
+//    }
+
+    env = getEnv();
+
+    //找到相应的类
+//    cls = env->GetObjectClass(g_obj);
+    cls = findClass(env,"com/megvii/guoyizhe/jnisamples/LessonActivity");
+    if(cls == NULL){
+        LOG("FindClass() Error.....");
+        g_jvm->DetachCurrentThread();
+        return NULL;
+    }
+    //找到对应方法
+    mid = env->GetStaticMethodID(cls,"getFromJNI","(I)V");
+    if(mid == NULL){
+        LOG("FindMethod() Error.....");
+        g_jvm->DetachCurrentThread();
+        return NULL;
+    }
+    LOG("JNI call method");
+    //调用静态方法
+    env->CallStaticVoidMethod(cls,mid, *((int*)(&arg)));
+    LOG("JNI call method end");
+
+    //Detach主线程
+    if(mNeedDetach) {
+        g_jvm->DetachCurrentThread();
+    }
+    LOG("detach over");
+    return NULL;
+}
+
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_megvii_guoyizhe_jnisamples_LessonActivity_ThreadTest(JNIEnv *env, jclass type,
+                                                              jobject cls) {
+
+    //保存全局JVM以便在子线程中使用
+    env->GetJavaVM(&g_jvm);
+    g_obj = env->NewGlobalRef(cls);
+    int i;
+    pthread_t pt[NUMTHREAD];
+    for (i = 0; i < NUMTHREAD; i++){
+        pthread_create(&pt[i], NULL, &thread_fun, (void *)i);
+    }
+//    env->DeleteGlobalRef(g_obj);
+}
+
+JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *pjvm, void *reserved) {
+    LOG("JNI OnLoad");
+    gJvm = pjvm;  // cache the JavaVM pointer
+    JNIEnv* env = getEnv();
+    //replace with one of your classes in the line below
+    jclass randomClass = env->FindClass("com/megvii/guoyizhe/jnisamples/LessonActivity");
+    jclass classClass = env->GetObjectClass(randomClass);
+    jclass classLoaderClass = env->FindClass("java/lang/ClassLoader");
+    jmethodID getClassLoaderMethod = env->GetMethodID(classClass, "getClassLoader",
+                                                      "()Ljava/lang/ClassLoader;");
+    jobject localClassLoader = env->CallObjectMethod(randomClass, getClassLoaderMethod);
+    gClassLoader = env->NewGlobalRef(localClassLoader);
+    //我在Android中用findClass不行，改成loadClass才可以找到class
+    gFindClassMethod = env->GetMethodID(classLoaderClass, "findClass",
+                                        "(Ljava/lang/String;)Ljava/lang/Class;");
+
+    return JNI_VERSION_1_6;
+}
+
+JNIEXPORT void JNICALL JNI_OnUnload(JavaVM *pjvm, void *reserved) {
+    LOG("JNI OnUnload");
 }

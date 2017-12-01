@@ -31,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
         list.add("JNI Lesson3");
         list.add("JNI Lesson4");
         list.add("JNI Lesson5");
+        list.add("JNI Lesson6");
         CustomAdapter adapter = new CustomAdapter(list);
         rv_list.setAdapter(adapter);
 
