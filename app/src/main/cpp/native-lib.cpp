@@ -74,6 +74,9 @@ Java_com_megvii_guoyizhe_jnisamples_LessonActivity_LessonTwo(JNIEnv *env, jclass
     testval->getVal(env);
     testValInt = 50;
 
+    char *str = (char *) env->GetStringUTFChars(string, 0);
+    LOG("%s",str);
+
 
     return env->NewStringUTF("LessonTwo");
 }
@@ -195,6 +198,8 @@ void *thread_fun(void *arg){
 //        mNeedDetach = JNI_TRUE;
 //    }
 
+    LOG("tid = %d",gettid());
+
     env = getEnv();
 
     //找到相应的类
@@ -239,6 +244,7 @@ Java_com_megvii_guoyizhe_jnisamples_LessonActivity_ThreadTest(JNIEnv *env, jclas
     for (i = 0; i < NUMTHREAD; i++){
         pthread_create(&pt[i], NULL, &thread_fun, (void *)i);
     }
+
 //    env->DeleteGlobalRef(g_obj);
 }
 
@@ -263,4 +269,25 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *pjvm, void *reserved) {
 
 JNIEXPORT void JNICALL JNI_OnUnload(JavaVM *pjvm, void *reserved) {
     LOG("JNI OnUnload");
+}
+
+//env虚拟机的环境
+//jstr 要转换的java字符串  GetStringUTFChars也可以
+
+char* Jstring2cstr(JNIEnv* env,jstring jstr){
+    char* rtn=NULL;
+    jclass clsstring=env->FindClass("java/lang/String");
+    jstring strencode=env->NewStringUTF("GB2312");
+    jmethodID mid=env->GetMethodID(clsstring,"getBytes","(Ljava/lang/String;)[B");
+    jbyteArray barr=(jbyteArray)env->CallObjectMethod(jstr,mid,strencode);
+    jsize alen=env->GetArrayLength(barr);
+    jbyte* ba=env->GetByteArrayElements(barr,JNI_FALSE);
+    if(alen>0){
+        rtn=(char*)malloc(alen+1);
+        memcpy(rtn,ba,alen);
+        rtn[alen]=0;
+    }
+    env->ReleaseByteArrayElements(barr,ba,0);
+    return rtn;
+
 }
