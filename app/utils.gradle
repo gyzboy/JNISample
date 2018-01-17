@@ -1,0 +1,16 @@
+
+def getVersion(){
+    print "this is util.gradle"
+}
+
+def targetTasks = project.tasks.findAll{task->
+//    task.name.contains("Debug")
+}
+targetTasks.each {
+    print "this is disableTask"
+    it.setEnabled(false)
+}
+ext{
+    getVersionNameAdvanced = this.&getVersion()
+    disableDebugBuild = this.&disableDebugBuild
+}

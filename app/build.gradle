@@ -27,6 +27,9 @@ android {
             path "CMakeLists.txt"
         }
     }
+
+    apply from: 'utils.gradle'
+
 }
 
 dependencies {
@@ -39,3 +42,4 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:recyclerview-v7:26.+'
 }
+

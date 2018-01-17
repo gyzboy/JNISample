@@ -8,4 +8,10 @@
 #endif //JNISAMPLES_COMMON_H
 
 #include<android/log.h>
-#define  LOG(...)  __android_log_print(ANDROID_LOG_ERROR,"JNISample",__VA_ARGS__)
+#define TAG "JNISample"
+#define LOGOPEN  1
+#if(LOGOPEN == 1)
+    #define LOG(...) __android_log_print(ANDROID_LOG_VERBOSE,TAG,__VA_ARGS__)
+#else
+    #define LOG(...) NULL
+#endif

@@ -1,1 +1,27 @@
 include ':app'
+
+def firstDo(int a,int b,Closure closure){
+    print "$a,$b"
+    closure()//执行closure
+}
+
+def cosure = {
+    int c ,String b->
+        print "$c,$b"
+}
+
+firstDo 4,5,{cosure(10,"hello closure")}
+
+def initMinshengGradleEnvironment() {
+    println "initialize Minsheng Gradle Environment ....."
+    Properties properties = new Properties()
+    //local.properites 也放在 posdevice 目录下
+    File propertyFile = new File(rootDir.getAbsolutePath() + "/local.properties")
+    properties.load(propertyFile.newDataInputStream())
+
+    gradle.ext.sdkDir = properties.getProperty('sdk.dir')
+
+    print "$gradle.ext.sdkDir"
+}
+
+initMinshengGradleEnvironment()
