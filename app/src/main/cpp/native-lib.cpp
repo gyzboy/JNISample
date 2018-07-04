@@ -8,6 +8,10 @@
 #include<pthread.h>
 #include<unistd.h>
 
+#include <iostream>
+#include <fstream>
+using namespace std;
+
 int castIntTest();
 
 extern int testValInt;
@@ -74,11 +78,22 @@ Java_com_megvii_guoyizhe_jnisamples_LessonActivity_LessonTwo(JNIEnv *env, jclass
     testval->getVal(env);
     testValInt = 50;
 
-    char *str = (char *) env->GetStringUTFChars(string, 0);
+    LOG("%p",&string);
+
+    jboolean issCopy = JNI_FALSE;
+    char *str = (char *) env->GetStringUTFChars(string, &issCopy);
+    str[0] = 'D';
     LOG("%s",str);
+    LOG("%p",str);
 
+    jboolean isCopy = JNI_TRUE;
+    char *string1 = (char *)env->GetStringUTFChars(string,&isCopy);
+    string1[1] = 'Z';
+    LOG("%s",string1);
+    LOG("%p",string1);
+    jstring returnValue = env->NewStringUTF(str);
 
-    return env->NewStringUTF("LessonTwo");
+    return returnValue;
 }
 
 int testValInt = 10;
@@ -106,6 +121,14 @@ Java_com_megvii_guoyizhe_jnisamples_LessonActivity_LessonFour(JNIEnv *env, jclas
     jsize size = env->GetArrayLength(origin_);
     for (int i = 0; i < size; ++i) {
         origin[i] = 'C';
+        LOG("%c",origin[i]);
+    }
+
+    jint length = env->GetArrayLength(origin_);
+    jchar chars[length];
+    env->GetCharArrayRegion(origin_,0,length,chars);
+    for (int i = 0; i < length; ++i) {
+        LOG("%c",chars[i]);
     }
 
     env->ReleaseCharArrayElements(origin_, origin, 1);//最后一个标志是否将更改后的元素复制到原数组中
@@ -289,5 +312,20 @@ char* Jstring2cstr(JNIEnv* env,jstring jstr){
     }
     env->ReleaseByteArrayElements(barr,ba,0);
     return rtn;
+
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_megvii_guoyizhe_jnisamples_LessonActivity_NioTest(JNIEnv *env, jclass type,
+                                                           jobject buffer) {
+
+
+//    if(buffer != NULL) {
+//        unsigned char *result = (unsigned char *) env->GetDirectBufferAddress(buffer);
+//        for (int i = 0; i < 10; ++i) {
+//            LOG("%c", result[i]);
+//        }
+//    }
 
 }

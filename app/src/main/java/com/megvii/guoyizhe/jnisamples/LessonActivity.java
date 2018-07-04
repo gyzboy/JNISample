@@ -2,12 +2,21 @@ package com.megvii.guoyizhe.jnisamples;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.nfc.Tag;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.widget.TextView;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.lang.reflect.Method;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 
 /**
  * Created by guoyizhe on 2017/10/20.
@@ -33,9 +42,11 @@ public class LessonActivity extends Activity implements ITest {
 
     public static native void ThreadTest(LessonActivity cls);
 
-    public static void getFromJNI(int i){
+    public static native void NioTest(ByteBuffer buffer);
 
-        Log.v(TAG,i + "");
+    public static void getFromJNI(int i) {
+
+        Log.v(TAG, i + "");
     }
 
 
@@ -52,7 +63,9 @@ public class LessonActivity extends Activity implements ITest {
                 tv_text.setText(LessonOne());
                 break;
             case 1:
-                LessonTwo("testString");
+                String str = "testString";
+                str = LessonTwo(str);
+                Log.d("JNISample", "return value is " + str);
                 break;
             case 2:
                 LessonThree(5);
@@ -65,6 +78,35 @@ public class LessonActivity extends Activity implements ITest {
                 break;
             case 5:
                 ThreadTest(LessonActivity.this);
+                break;
+            case 6:
+                try {
+                    File file = new File(getExternalFilesDir("jnisample"), "testNio");
+                    if (!file.exists()) {
+                        file.createNewFile();
+                    }
+                    FileChannel write = new FileOutputStream(file).getChannel();
+                    String newData = "hello world";
+                    ByteBuffer buffer = ByteBuffer.allocate(newData.length());
+                    buffer.put(newData.getBytes());
+                    while (buffer.hasRemaining()) {
+                        write.write(buffer);
+                    }
+                    FileChannel channel = new FileInputStream(file).getChannel();
+                    while (channel.read(buffer) != -1) {
+                        buffer.flip();
+
+                        // 有几种方式可以操作ByteBuffer
+                        // 1.可以将当前Buffer包含的字节数组全部读取出来
+                        Log.d(TAG, new String(buffer.array()));
+                        NioTest(buffer);
+                    }
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                break;
             default:
                 break;
         }
