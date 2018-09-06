@@ -3,6 +3,9 @@
 
 # Sets the minimum version of CMake required to build the native library.
 
+#如果您在 CMake 构建脚本中重命名或移除某个库，您需要先清理项目，
+#Gradle 随后才会应用更改或者从 APK 中移除旧版本的库。要清理项目，请从菜单栏中选择 Build > Clean Project
+
 cmake_minimum_required(VERSION 3.4.1)#指定cmake版本
 
 # Creates and names a library, sets it as either STATIC
@@ -16,6 +19,27 @@ cmake_minimum_required(VERSION 3.4.1)#指定cmake版本
 
 # 导入cpp目录下的所有头文件
 #include_directories(src/main/cpp/)
+
+#NDK 还以源代码的形式包含一些库，您在构建和关联到您的原生库时需要使用这些代码。您可以使用 CMake 构建脚本中的 add_library() 命令，
+#将源代码编译到原生库中。要提供本地 NDK 库的路径，您可以使用 ANDROID_NDK 路径变量，Android Studio 会自动为您定义此变量
+add_library( app-glue
+             STATIC
+             ${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c )
+
+#添加预构建库与为 CMake 指定要构建的另一个原生库类似。不过，由于库已经预先构建，您需要使用 IMPORTED 标志告知 CMake 您只希望将库导入到项目中
+add_library( imported-lib
+              SHARED
+              IMPORTED )
+#使用 set_target_properties() 命令指定库的路径
+set_target_properties( # Specifies the target library.
+                       imported-lib
+
+                       # Specifies the parameter you want to define.
+                       PROPERTIES IMPORTED_LOCATION
+
+                       # Provides the path to the library you want to import.
+                       imported-lib/src/${ANDROID_ABI}/libimported-lib.so )
+include_directories( imported-lib/include/ )
 
 add_library( #生成函数库的名字
              native-lib
